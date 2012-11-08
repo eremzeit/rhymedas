@@ -1,5 +1,3 @@
-require 'pry'
-
 class Syllable < Array
   attr_accessor :stress
 
@@ -15,41 +13,6 @@ class Syllable < Array
   end
 end
 
-# Returns a hash of lists of phonemes in each word, keyed on the word
-def load_phoneme_map
-  phoneme_map = {}
-  _load do |word, line|
-    phoneme_map[word] = line
-  end
-  phoneme_map
-end
-
-# Returns a hash of lists of syllables in each word, keyed on the word
-def load_syllable_map
-  syllable_map = {}
-
-  _load do |word, line|
-    syllable_map[word] = guess_syllables(line)
-  end
-  syllable_map
-end
-
-# iteratively yields (word, phonemes)
-def _load
-  file = File.new("data/cmu-rhyming-dictionary.txt")
-  starts_with_letter = /^[a-zA-Z]/
-  has_parens = /\([0-9]\)/
-
-  while(line = file.gets)
-    if !starts_with_letter.match(line) || has_parens.match(line)
-      next
-    end
-    line = line.split
-    word = line.slice!(0)
-    next if word == ''
-    yield(word, line)
-  end
-end
 
 def starts_with_vowel?(str)
   ['a', 'e', 'i', 'o', 'u'].each do |x|
@@ -147,5 +110,3 @@ def test_indices
   two_allit = build_index(word_map, 2, :start)
   require 'pry'; binding.pry
 end
-
-PHONEME_MAP = load_phoneme_map

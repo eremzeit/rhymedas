@@ -1,0 +1,5 @@
+require 'rhymedas/words.rb'
+require 'rhymedas/detector.rb'
+require 'rhymedas/text_segment.rb'
+require 'rhymedas/syllable_maker.rb'
+require 'rhymedas/utils.rb'
