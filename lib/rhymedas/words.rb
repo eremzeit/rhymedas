@@ -1,36 +1,37 @@
 module Rhymedas
   class Words
+    DEFAULT_PHONEME_FILEPATH = "data/cmu-rhyming-dictionary.txt"
+
     def self.phonemes(word)
-      @phoneme_map ||= load_phoneme_map
+      init if @phoneme_map.nil?
+      @phoneme_map[word.upcase]
     end
 
     def self.syllables(word)
+      init if @syllable_map.nil?
       @syllable_map ||= load_syllable_map
+      @syllable_map[word.upcase]
     end
 
+    def self.init(phoneme_filepath = nil)
+      @phoneme_map = {}
+      @syllable_map = {}
+      path = phoneme_filepath || DEFAULT_PHONEME_FILEPATH
+
+      _load(path) do |word, line|
+        @phoneme_map[word] = line
+        @syllable_map[word] = SyllableMaker.guess_syllables(line)
+      end
+    end
+
+    def self.count
+      @phoneme_map.keys.length
+    end
     private
-    # Returns a hash of lists of phonemes in each word, keyed on the word
-    def self.load_phoneme_map
-      phoneme_map = {}
-      _load do |word, line|
-        phoneme_map[word] = line
-      end
-      phoneme_map
-    end
-
-    # Returns a hash of lists of syllables in each word, keyed on the word
-    def self.load_syllable_map
-      syllable_map = {}
-
-      _load do |word, line|
-        syllable_map[word] = guess_syllables(line)
-      end
-      syllable_map
-    end
 
     # iteratively yields (word, phonemes)
-    def self._load
-      file = File.new("data/cmu-rhyming-dictionary.txt")
+    def self._load(filepath)
+      file = File.new(filepath)
       starts_with_letter = /^[a-zA-Z]/
       has_parens = /\([0-9]\)/
 

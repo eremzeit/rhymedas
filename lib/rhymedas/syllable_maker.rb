@@ -1,5 +1,4 @@
 module Rhymedas
-
   class SyllableMaker
     PAIRS = [
               ['C','T'],
