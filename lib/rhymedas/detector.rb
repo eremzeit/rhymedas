@@ -1,5 +1,4 @@
 module Rhymedas
-
   # Has methods to detect what kinds of rhymes two words have
   class Detector
     #_x_ syllabic: a rhyme in which the last syllable of each word sounds the same but does not necessarily contain vowels. (cleaver, silver, or pitter, patter)
@@ -12,6 +11,8 @@ module Rhymedas
     #___ half rhyme (or slant rhyme): matching final consonants. (bent, ant)
     #___ pararhyme: all consonants match. (tell, tall)
     #___ alliteration (or head rhyme): matching initial consonants. (short, ship)
+    RHYME_TYPES = [:syllabic, :imperfect, :weak, :assonance, :consonance,
+                    :semirhyme, :forced, :halfrhyme, :pararhyme, :alliteration]
 
     def self.rhyme_methods
       self.methods.select{|name| name.to_s.end_with?('rhyme?') }
@@ -25,12 +26,21 @@ module Rhymedas
       Detector.normalize_stresses!(syllables1)
       Detector.normalize_stresses!(syllables2)
 
-      puts "#{word1}, #{word2}"
-      rhyme_methods.each do |method|
-        r = send(method, phon1, phon2, syllables1, syllables2)
-        puts "#{method}: #{r}"
+      RHYME_TYPES.each do |type|
+        r = send("#{type}_rhyme?", phon1, phon2, syllables1, syllables2)
       end
       puts
+    end
+
+    def self.have_rhyme(word1, word2, type)
+      phon1, phon2 = Words.phonemes(word1), Words.phonemes(word2)
+
+      syllables1 = SyllableMaker.guess_syllables(phon1)
+      syllables2 = SyllableMaker.guess_syllables(phon2)
+      Detector.normalize_stresses!(syllables1)
+      Detector.normalize_stresses!(syllables2)
+
+      r = send("#{type}_rhyme?", phon1, phon2, syllables1, syllables2)
     end
 
     def self.perfect_rhyme?(phonemes1, phonemes2, syllables1, syllables2)
@@ -56,6 +66,26 @@ module Rhymedas
       end
 
       phonemes1.all? {|p| phonemes2.include?(p) } || phonemes2.all? {|p| phonemes1.include?(p) }
+    end
+
+    def self.alliteration_rhyme?(phonemes1, phonemes2, syllables1, syllables2)
+      false
+    end
+
+    def self.forced_rhyme?(phonemes1, phonemes2, syllables1, syllables2)
+      false
+    end
+
+    def self.halfrhyme_rhyme?(phonemes1, phonemes2, syllables1, syllables2)
+      false
+    end
+
+    def self.semirhyme_rhyme?(phonemes1, phonemes2, syllables1, syllables2)
+      false
+    end
+
+    def self.pararhyme_rhyme?(phonemes1, phonemes2, syllables1, syllables2)
+      false
     end
 
     def self.consonance_rhyme?(phonemes1, phonemes2, syllables1, syllables2)
@@ -121,15 +151,14 @@ module Rhymedas
         end
       end
     end
+
+    RHYME_TYPES.each do |type|
+      instance_eval %Q"
+        def have_#{type}_rhyme?(word1, word2)
+          Detector.have_rhyme(word1, word2, :#{type})
+        end
+      "
+    end
   end
 
-  def test_guesses
-    puts
-    print Detector.guess_syllables(Words.phonemes('EARTH'))
-    puts
-    print Detector.guess_syllables(Words.phonemes('FOLLOWER'))
-    puts
-    print Detector.guess_syllables(Words.phonemes('LIVINGS'))
-    puts
-  end
 end
